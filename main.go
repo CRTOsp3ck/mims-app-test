@@ -4,16 +4,12 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/handlebars/v2"
+	"github.com/gofiber/template/html/v2"
 )
 
 func main() {
 	// Create a new engine
-	engine := handlebars.New("./views", ".hbs")
-
-	// Or from an embedded system
-	// See github.com/gofiber/embed for examples
-	// engine := html.NewFileSystem(http.Dir("./views", ".hbs"))
+	engine := html.New("./views", ".html")
 
 	// Pass the engine to the Views
 	app := fiber.New(fiber.Config{
@@ -27,15 +23,27 @@ func main() {
 		})
 	})
 
-	app.Get("/layout", func(c *fiber.Ctx) error {
-		// Render index within layouts/main
-		return c.Render("index", fiber.Map{
-			"Title": "Hello, World!",
+	app.Get("/main", func(c *fiber.Ctx) error {
+		// Render dashboard within layouts/main
+		return c.Render("dashboard", fiber.Map{
+			"Title": "Dashboard",
+		}, "layouts/main")
+	})
+
+	app.Get("/main/pos", func(c *fiber.Ctx) error {
+		return c.Render("pos", fiber.Map{
+			"Title": "New Sale",
+		}, "layouts/main")
+	})
+
+	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
+		return c.Render("sales-history", fiber.Map{
+			"Title": "Sales History",
 		}, "layouts/main")
 	})
 
 	// Static file server
-	app.Static("/static/src", "./static/src")
+	app.Static("/static", "./static")
 
 	// Start listening
 	log.Fatal(app.Listen(":3000"))
