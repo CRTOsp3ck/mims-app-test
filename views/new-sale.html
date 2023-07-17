@@ -24,7 +24,7 @@
                                     <select name="payment_type" class="selectpicker form-control" data-style="py-0">
                                         <option>Cash</option>
                                         <option>QR - Maybank</option>
-                                        <option>QR - Touch N Go</option>
+                                        <option>QR - Touch & Go</option>
                                         <option>Free</option>
                                     </select>
                                 </div>
@@ -110,8 +110,32 @@
                             </div> 
                         </div>
                         <br>                            
-                        <button type="submit" class="btn btn-primary mr-2">Add Sale</button>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+                        Add Sale
+                        </button>
                         <button type="reset" class="btn btn-danger">Reset</button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalCenterTitle">Confirm New Sale</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you would like to register this new sale?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary mr-2">Confirm</button>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        
                     </form>
                 </div>
             </div>
@@ -149,6 +173,7 @@
 
         totalAmount+=freshJuice_price;
         document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        document.getElementById('total_amount_input').value = totalAmount;
     })
     document.getElementById("fresh_juice_minus").addEventListener("click", function(){
         if(freshJuice_qty>0) {
@@ -158,6 +183,7 @@
 
             totalAmount-=freshJuice_price;
             document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+            document.getElementById('total_amount_input').value = totalAmount;
         }
     })
     document.getElementById("cut_fruit_plus").addEventListener("click", function(){
@@ -167,6 +193,7 @@
 
         totalAmount+=cutFruit_price;
         document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        document.getElementById('total_amount_input').value = totalAmount;
     })
     document.getElementById("cut_fruit_minus").addEventListener("click", function(){
         if(cutFruit_qty>0){
@@ -176,6 +203,7 @@
 
             totalAmount-=cutFruit_price;
             document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+            document.getElementById('total_amount_input').value = totalAmount;
         }
     })
     document.getElementById("raw_fruit_plus").addEventListener("click", function(){
@@ -185,6 +213,7 @@
 
         totalAmount+=rawFruit_price;
         document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        document.getElementById('total_amount_input').value = totalAmount;
     })
     document.getElementById("raw_fruit_minus").addEventListener("click", function(){
         if(rawFruit_qty>0) {
@@ -194,6 +223,7 @@
             
             totalAmount-=rawFruit_price;
             document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+            document.getElementById('total_amount_input').value = totalAmount;
         } 
     })
 </script>
