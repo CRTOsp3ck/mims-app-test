@@ -30,8 +30,8 @@ func main() {
 		}, "layouts/main")
 	})
 
-	app.Get("/main/pos", func(c *fiber.Ctx) error {
-		return c.Render("pos", fiber.Map{
+	app.Get("/main/new-sale", func(c *fiber.Ctx) error {
+		return c.Render("new-sale", fiber.Map{
 			"Title": "New Sale",
 		}, "layouts/main")
 	})
