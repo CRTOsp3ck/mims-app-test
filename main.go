@@ -30,10 +30,16 @@ func main() {
 		}, "layouts/main")
 	})
 
+	// New Sale
 	app.Get("/main/new-sale", func(c *fiber.Ctx) error {
 		return c.Render("new-sale", fiber.Map{
 			"Title": "New Sale",
 		}, "layouts/main")
+	})
+
+	// POST New Sale
+	app.Post("/main/new-sale/", func(c *fiber.Ctx) error {
+		return c.Send(c.Body())
 	})
 
 	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
@@ -47,4 +53,10 @@ func main() {
 
 	// Start listening
 	log.Fatal(app.Listen(":3000"))
+}
+
+type NewSale struct {
+	Date          string      `json:"date" xml:"date" form:"date"`
+	PaymentMethod string      `json:"payment_method" xml:"payment_method" form:"payment_method"`
+	SaleItemQty   map[int]int `json:"sale_item_qty" xml:"payment_method" form:"payment_method"` //map[item_id]item_quantity
 }

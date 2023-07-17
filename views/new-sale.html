@@ -8,19 +8,20 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!--Add post action HERE!!!!!!!-->
-                    <form action="page-list-returns.html" data-toggle="validator">
+                    <!--Add post action HERE!!!!!!! data-toggle="validator"-->
+                    <form action="/main/new-sale/" method="post" novalidate>
                         <div class="row">                                  
                             <div class="col-md-6">                      
                                 <div class="form-group">
                                     <label>Date *</label>
-                                    <input type="text" class="form-control" placeholder="Date">
+                                    <input type="datetime-local" class="form-control" id="sale_time_date" name="sale_time_date">
+                                    <!-- <input name="date" type="date" class="form-control" placeholder="Date"> -->
                                 </div>
                             </div>
                             <div class="col-md-6"> 
                                 <div class="form-group">
                                     <label>Payment Method *</label>
-                                    <select name="type" class="selectpicker form-control" data-style="py-0">
+                                    <select name="payment_type" class="selectpicker form-control" data-style="py-0">
                                         <option>Cash</option>
                                         <option>QR - Maybank</option>
                                         <option>QR - Touch N Go</option>
@@ -40,30 +41,33 @@
                                         <div class="card-body">
                                            <p>Add desired products to the cart.</p>
                                            <ul class="list-group">
-                                              <li class="list-group-item d-flex justify-content-around">
-                                                 <label>Cras justo odio</label>
-                                                 <label>14</label>
-                                                 <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
-                                                    <a class="button btn button-icon bg-primary" href="#">-</a>
-                                                    <a class="button btn button-icon bg-primary" href="#">+</a>
-                                                  </div>
+                                              <li class="list-group-item d-flex justify-content-between">
+                                                <input type="hidden" id="fresh_juice_qty_input" name="fresh_juice_qty" value="0">
+                                                <label>Fresh Juice - RM8 / 250ml</label>
+                                                <label id="fresh_juice_qty">0</label>
+                                                <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
+                                                    <a id="fresh_juice_plus" class="button btn button-icon bg-primary" href="#!">Add +</a>
+                                                    <a id="fresh_juice_minus" class="button btn button-icon bg-primary" href="#!">Remove -</a>
+                                                </div>
                                               </li>
 
-                                              <li class="list-group-item d-flex justify-content-around">
-                                                <label>Cras justo odio</label>
-                                                <label>14</label>
+                                              <li class="list-group-item d-flex justify-content-between">
+                                                <input type="hidden" id="cut_fruit_qty_input" name="cut_fruit_qty" value="0">
+                                                <label>Fresh Cut Fruit - RM8 / 350ml</label>
+                                                <label id="cut_fruit_qty">0</label>
                                                 <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
-                                                   <a class="button btn button-icon bg-primary" href="#">-</a>
-                                                   <a class="button btn button-icon bg-primary" href="#">+</a>
+                                                    <a id="cut_fruit_plus" class="button btn button-icon bg-primary" href="#!">Add +</a>
+                                                    <a id="cut_fruit_minus" class="button btn button-icon bg-primary" href="#!">Remove -</a>
                                                  </div>
                                              </li>
 
-                                             <li class="list-group-item d-flex justify-content-around">
-                                                <label>Cras justo odio</label>
-                                                <label>14</label>
+                                             <li class="list-group-item d-flex justify-content-between">
+                                                <input type="hidden" id="raw_fruit_qty_input" name="raw_fruit_qty" value="0">
+                                                <label>Raw Fruit - RM5 / fruit</label>
+                                                <label id="raw_fruit_qty">0</label>
                                                 <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
-                                                   <a class="button btn button-icon bg-primary" href="#">-</a>
-                                                   <a class="button btn button-icon bg-primary" href="#">+</a>
+                                                    <a id="raw_fruit_plus" class="button btn button-icon bg-primary" href="#!">Add +</a>
+                                                    <a id="raw_fruit_minus" class="button btn button-icon bg-primary" href="#!">Remove -</a>
                                                  </div>
                                              </li>
                                            </ul>
@@ -82,7 +86,7 @@
                                         </div>
                                         <div class="card-body">
                                             <label>Total amount to be paid</label>
-                                            <h1>RM16.00</h1>
+                                            <h1 id="total_amount">RM0.00</h1>
                                             <hr>
                                            <p>Grand total for the selected products.</p>
 
@@ -92,7 +96,7 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label>Sale Note *</label>
+                                    <label>Sale Note</label>
                                     <div id="quill-tool">
                                         <button class="ql-bold" data-toggle="tooltip" data-placement="bottom" title="Bold"></button>
                                         <button class="ql-underline" data-toggle="tooltip" data-placement="bottom" title="Underline"></button>
@@ -117,5 +121,83 @@
 </div>
 
 {{define "js"}}
+<script>
+    //Date
+    const timeElapsed = Date.now();
+    const today = new Date(timeElapsed);
+    
+    const dateControl = document.querySelector('input[type="datetime-local"]');
+    var today_formatted = today.getFullYear()+"-"+(('0' + (today.getMonth()+1)).slice(-2))+"-"+('0' + today.getDate()).slice(-2)+"T"+('0' + today.getHours()).slice(-2)+":"+('0' + today.getMinutes()).slice(-2);
+    dateControl.value = today_formatted;
+    console.log("Date: "+today_formatted);
+
+    //Products hardcoded - fuck it for now!
+    var freshJuice_qty = 0;
+    var cutFruit_qty = 0;
+    var rawFruit_qty = 0;
+
+    const freshJuice_price = 8.00;
+    const cutFruit_price = 8.00;
+    const rawFruit_price = 3.00;
+
+    var totalAmount = 0;
+
+    document.getElementById("fresh_juice_plus").addEventListener("click", function(){
+        freshJuice_qty++;
+        document.getElementById('fresh_juice_qty').innerHTML = freshJuice_qty;
+        document.getElementById("fresh_juice_qty_input").value = freshJuice_qty;
+
+        totalAmount+=freshJuice_price;
+        document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+    })
+    document.getElementById("fresh_juice_minus").addEventListener("click", function(){
+        if(freshJuice_qty>0) {
+            freshJuice_qty--;
+            document.getElementById('fresh_juice_qty').innerHTML = freshJuice_qty;
+            document.getElementById("fresh_juice_qty_input").value = freshJuice_qty;
+
+            totalAmount-=freshJuice_price;
+            document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        }
+    })
+    document.getElementById("cut_fruit_plus").addEventListener("click", function(){
+        cutFruit_qty++;
+        document.getElementById('cut_fruit_qty').innerHTML = cutFruit_qty;
+        document.getElementById("cut_fruit_qty_input").value = cutFruit_qty;
+
+        totalAmount+=cutFruit_price;
+        document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+    })
+    document.getElementById("cut_fruit_minus").addEventListener("click", function(){
+        if(cutFruit_qty>0){
+            cutFruit_qty--;
+            document.getElementById('cut_fruit_qty').innerHTML = cutFruit_qty;
+            document.getElementById("cut_fruit_qty_input").value = cutFruit_qty;
+
+            totalAmount-=cutFruit_price;
+            document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        }
+    })
+    document.getElementById("raw_fruit_plus").addEventListener("click", function(){
+        rawFruit_qty++;
+        document.getElementById('raw_fruit_qty').innerHTML = rawFruit_qty;
+        document.getElementById('raw_fruit_qty_input').value = rawFruit_qty;
+
+        totalAmount+=rawFruit_price;
+        document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+    })
+    document.getElementById("raw_fruit_minus").addEventListener("click", function(){
+        if(rawFruit_qty>0) {
+            rawFruit_qty--;
+            document.getElementById('raw_fruit_qty').innerHTML = rawFruit_qty;
+            document.getElementById('raw_fruit_qty_input').value = rawFruit_qty;
+            
+            totalAmount-=rawFruit_price;
+            document.getElementById('total_amount').innerHTML = "RM" + totalAmount;
+        } 
+    })
+</script>
+
+    
 
 {{end}}
