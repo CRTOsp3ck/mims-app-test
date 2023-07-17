@@ -8,6 +8,7 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <!--Add post action HERE!!!!!!!-->
                     <form action="page-list-returns.html" data-toggle="validator">
                         <div class="row">                                  
                             <div class="col-md-6">                      
@@ -16,75 +17,79 @@
                                     <input type="text" class="form-control" placeholder="Date">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Reference No *</label>
-                                    <input type="text" class="form-control" placeholder="Enter Reference No" required>
-                                    <div class="help-block with-errors"></div>
-                                </div>
-                            </div> 
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Biller *</label>
-                                    <select name="type" class="selectpicker form-control" data-style="py-0">
-                                        <option>Test Biller</option>
-                                    </select>
-                                </div> 
-                            </div>  
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label>Customer *</label>
-                                    <input type="text" class="form-control" placeholder="Enter Customer Name" required>
-                                    <div class="help-block with-errors"></div>
-                                </div>
-                            </div>   
                             <div class="col-md-6"> 
                                 <div class="form-group">
-                                    <label>Order Tax *</label>
+                                    <label>Payment Method *</label>
                                     <select name="type" class="selectpicker form-control" data-style="py-0">
-                                        <option>No Text</option>
-                                        <option>GST @5%</option>
-                                        <option>VAT @10%</option>
+                                        <option>Cash</option>
+                                        <option>QR - Maybank</option>
+                                        <option>QR - Touch N Go</option>
+                                        <option>Free</option>
                                     </select>
                                 </div>
                             </div> 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Order Discount</label>
-                                    <input type="text" class="form-control" placeholder="Discount">
-                                </div>
-                            </div> 
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label>Shipping</label>
-                                    <input type="text" class="form-control" placeholder="Shpping">
-                                </div>
+                                    <label>Products *</label>
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between">
+                                           <div class="header-title">
+                                              <h4 class="card-title">Select Product Quantity</h4>
+                                           </div>
+                                        </div>
+                                        <div class="card-body">
+                                           <p>Add desired products to the cart.</p>
+                                           <ul class="list-group">
+                                              <li class="list-group-item d-flex justify-content-around">
+                                                 <label>Cras justo odio</label>
+                                                 <label>14</label>
+                                                 <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
+                                                    <a class="button btn button-icon bg-primary" href="#">-</a>
+                                                    <a class="button btn button-icon bg-primary" href="#">+</a>
+                                                  </div>
+                                              </li>
+
+                                              <li class="list-group-item d-flex justify-content-around">
+                                                <label>Cras justo odio</label>
+                                                <label>14</label>
+                                                <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
+                                                   <a class="button btn button-icon bg-primary" href="#">-</a>
+                                                   <a class="button btn button-icon bg-primary" href="#">+</a>
+                                                 </div>
+                                             </li>
+
+                                             <li class="list-group-item d-flex justify-content-around">
+                                                <label>Cras justo odio</label>
+                                                <label>14</label>
+                                                <div class="btn-group btn-group-toggle btn-group-edges mr-2 btn-group2"> 
+                                                   <a class="button btn button-icon bg-primary" href="#">-</a>
+                                                   <a class="button btn button-icon bg-primary" href="#">+</a>
+                                                 </div>
+                                             </li>
+                                           </ul>
+                                        </div>
+                                     </div>
+                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Attach Document</label>
-                                    <input type="file" class="form-control image-file" name="pic" accept="image/*">
-                                </div>
+                                    <label>Total</label>
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between">
+                                           <div class="header-title">
+                                              <h4 class="card-title">Grand Total</h4>
+                                           </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <label>Total amount to be paid</label>
+                                            <h1>RM16.00</h1>
+                                            <hr>
+                                           <p>Grand total for the selected products.</p>
+
+                                        </div>
+                                     </div>
+                                 </div>
                             </div>
-                            <div class="col-md-6"> 
-                                <div class="form-group">
-                                    <label>Sale Status *</label>
-                                    <select name="type" class="selectpicker form-control" data-style="py-0">
-                                        <option>Completed</option>
-                                        <option>Pending</option>
-                                    </select>
-                                </div>
-                            </div> 
-                            <div class="col-md-6"> 
-                                <div class="form-group">
-                                    <label>Payment Status *</label>
-                                    <select name="type" class="selectpicker form-control" data-style="py-0">
-                                        <option>Pending</option>
-                                        <option>Due</option>
-                                        <option>Paid</option>
-                                    </select>
-                                </div>
-                            </div> 
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label>Sale Note *</label>
@@ -99,7 +104,8 @@
                                     </div>
                                 </div>
                             </div> 
-                        </div>                            
+                        </div>
+                        <br>                            
                         <button type="submit" class="btn btn-primary mr-2">Add Sale</button>
                         <button type="reset" class="btn btn-danger">Reset</button>
                     </form>

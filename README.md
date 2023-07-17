@@ -1,6 +1,7 @@
 MIMS APP (BUSINESS LOGIC + FRONT END)
 
-##### PAGES #####
+##### ROUTES #####
 1. Dashboard (landing page)
-2. POS
-3. Sales history
+2. Sales
+3.1. Add Sales
+3.2. List Sales
