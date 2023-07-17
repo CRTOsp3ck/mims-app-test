@@ -14,7 +14,11 @@ import (
 	"github.com/gofiber/template/html/v2"
 )
 
-const apiServerAddr string = "http://104.248.98.237:3000/"
+// for production
+const apiServerAddr string = "http://127.0.0.1:3001/"
+
+// for development
+// const apiServerAddr string = "http://104.248.98.237:3001/"
 
 func main() {
 	// Create a new engine
@@ -166,7 +170,7 @@ func main() {
 			viewSale := ViewSale{
 				ID:          jsonSales.Sales[index].ID,
 				Amount:      "RM" + strconv.FormatFloat(float64(jsonSales.Sales[index].Amount), 'f', -1, 64),
-				Qty:         strconv.FormatFloat(float64(jsonSales.Sales[index].Amount), 'f', -1, 64) + " unit(s)",
+				Qty:         strconv.FormatFloat(float64(jsonSales.Sales[index].Qty), 'f', -1, 64) + " unit(s)",
 				PaymentType: paymentType,
 				Operation:   operation,
 				Item:        item,
@@ -176,31 +180,8 @@ func main() {
 			viewSales = append(viewSales, &viewSale)
 		}
 
-		viewSales = reverseSales(viewSales)
-
-		//**Test sales data to see if it renders properly via the html template**
-		// sales := []Sale{
-		// 	{
-		// 		ID:          1,
-		// 		Amount:      16.00,
-		// 		Qty:         2,
-		// 		PaymentType: 1,
-		// 		OperationID: 1,
-		// 		ItemID:      1,
-		// 		CreatedAt:   time.Now().Truncate(time.Duration(time.Now().Day())),
-		// 		UpdatedAt:   time.Now().Truncate(time.Duration(time.Now().Day())),
-		// 	},
-		// 	{
-		// 		ID:          2,
-		// 		Amount:      24.00,
-		// 		Qty:         3,
-		// 		PaymentType: 2,
-		// 		OperationID: 1,
-		// 		ItemID:      1,
-		// 		CreatedAt:   time.Now().Truncate(time.Duration(time.Now().Day())),
-		// 		UpdatedAt:   time.Now().Truncate(time.Duration(time.Now().Day())),
-		// 	},
-		// }
+		//reversing to sort by descending order
+		viewSales = reverseViewSales(viewSales)
 
 		//pass it to the renderer
 		return c.Render("sales-history", fiber.Map{
@@ -216,11 +197,11 @@ func main() {
 	log.Fatal(app.Listen(":3000"))
 }
 
-func reverseSales(input []*ViewSale) []*ViewSale {
+func reverseViewSales(input []*ViewSale) []*ViewSale {
 	if len(input) == 0 {
 		return input
 	}
-	return append(reverseSales(input[1:]), input[0])
+	return append(reverseViewSales(input[1:]), input[0])
 }
 
 func parsePaymentMethodToInt(paymentType string) (int, error) {
