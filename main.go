@@ -36,6 +36,7 @@ func main() {
 		})
 	})
 
+	// Dashboard
 	app.Get("/main", func(c *fiber.Ctx) error {
 		// Render dashboard within layouts/main
 		return c.Render("dashboard", fiber.Map{
@@ -111,6 +112,7 @@ func main() {
 
 	})
 
+	// Sales history
 	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
 		url := apiServerAddr + "sales/find/"
 
@@ -187,6 +189,14 @@ func main() {
 		return c.Render("sales-history", fiber.Map{
 			"Title": "Sales History",
 			"Sales": viewSales,
+		}, "layouts/main")
+	})
+
+	// Sales report
+	app.Get("/main/sales-report", func(c *fiber.Ctx) error {
+		//pass it to the renderer
+		return c.Render("sales-report", fiber.Map{
+			"Title": "Sales Analysis",
 		}, "layouts/main")
 	})
 
