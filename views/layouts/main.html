@@ -84,13 +84,13 @@
                                 </svg>
                             </a>
                             <ul id="purchase" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                                <li class="">
-                                    <a href="../backend/page-add-purchase.html">
+                                {{if eq .Title "Add Purchase"}} <li class="active"> {{else}} <li class=""> {{end}}
+                                    <a href="/main/add-purchase">
                                         <i class="las la-minus"></i><span>Add purchase</span>
                                     </a>
                                 </li>        
-                                <li class="">
-                                    <a href="../backend/page-list-purchase.html">
+                                {{if eq .Title "List Purchase"}} <li class="active"> {{else}} <li class=""> {{end}}
+                                    <a href="/main/list-purchase">
                                         <i class="las la-minus"></i><span>List Purchases</span>
                                     </a>
                                 </li>

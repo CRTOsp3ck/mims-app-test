@@ -200,6 +200,22 @@ func main() {
 		}, "layouts/main")
 	})
 
+	// Add purchase
+	app.Get("/main/add-purchase", func(c *fiber.Ctx) error {
+		//pass it to the renderer
+		return c.Render("add-purchase", fiber.Map{
+			"Title": "Add Purchase",
+		}, "layouts/main")
+	})
+
+	// List purchase
+	app.Get("/main/list-purchase", func(c *fiber.Ctx) error {
+		//pass it to the renderer
+		return c.Render("list-purchase", fiber.Map{
+			"Title": "List Purchase",
+		}, "layouts/main")
+	})
+
 	// Static file server
 	app.Static("/static", "./static")
 
