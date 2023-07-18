@@ -15,10 +15,10 @@ import (
 )
 
 // for production
-const apiServerAddr string = "http://127.0.0.1:3001/"
+// const apiServerAddr string = "http://127.0.0.1:3001/"
 
 // for development
-// const apiServerAddr string = "http://104.248.98.237:3001/"
+const apiServerAddr string = "http://104.248.98.237:3001/"
 
 func main() {
 	// Create a new engine
