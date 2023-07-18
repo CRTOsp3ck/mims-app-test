@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CRTOsp3ck/mims-app/helper"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
 )
@@ -194,10 +195,89 @@ func main() {
 
 	// Sales report
 	app.Get("/main/sales-report", func(c *fiber.Ctx) error {
+		url := apiServerAddr + "sales/find/"
+
+		client := http.Client{
+			Timeout: time.Second * 2, // Timeout after 2 seconds
+		}
+
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.Println("Post request not completed -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		req.Header.Set("User-Agent", "mims-app")
+		res, err := client.Do(req)
+		if err != nil {
+			log.Println("Error occured while awaiting response -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		if res.Body != nil {
+			defer res.Body.Close()
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		_ = body
+		if err != nil {
+			log.Println("Error reading response body -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		var jsonSales struct {
+			Sales []JsonSale `json:"sales"`
+		}
+
+		//convert that string (body) to json
+		if err := json.Unmarshal(body, &jsonSales); err != nil {
+			log.Println("Error unmarshalling body into JSON -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		// Lifetime VSR
+		lifetimeVsr := ViewSalesReport{}
+
+		// calcuating all the revenue of every sale ever made...
+		// i shouldnt be iterating as below
+		// not efficient. lets start thinking of this when shit hits the fan
+		for index := range jsonSales.Sales {
+			lifetimeVsr.TotalGrossRevenue += float64(jsonSales.Sales[index].Amount)
+		}
+
+		lifetimeVsr.TotalExpenses = helper.RoundTo(0.00, 2)
+		lifetimeVsr.TotalNetRevenue = helper.RoundTo(lifetimeVsr.TotalGrossRevenue-lifetimeVsr.TotalExpenses, 2)
+		lifetimeVsr.IncomeTax = helper.RoundTo(lifetimeVsr.TotalNetRevenue*0.12, 2)
+		lifetimeVsr.GrantLoan = helper.RoundTo(0.00, 2)
+		lifetimeVsr.ProfitLoss = helper.RoundTo(lifetimeVsr.TotalGrossRevenue+lifetimeVsr.GrantLoan-lifetimeVsr.TotalExpenses-lifetimeVsr.IncomeTax, 2)
+
+		// Periodic VSR
+		// It will be the same as lifetime when page loads
+		// maybe i should set the default range as the start of that current month until the last day of operation in that month
+		periodicVsr := ViewSalesReport{}
+		periodicVsr.TotalGrossRevenue = lifetimeVsr.TotalGrossRevenue
+		periodicVsr.TotalExpenses = lifetimeVsr.TotalExpenses
+		periodicVsr.TotalNetRevenue = lifetimeVsr.TotalNetRevenue
+		periodicVsr.IncomeTax = lifetimeVsr.IncomeTax
+		periodicVsr.GrantLoan = lifetimeVsr.GrantLoan
+		periodicVsr.ProfitLoss = lifetimeVsr.ProfitLoss
+
 		//pass it to the renderer
 		return c.Render("sales-report", fiber.Map{
-			"Title": "Sales Analysis",
+			"Title":       "Sales Analysis",
+			"LifetimeVsr": lifetimeVsr,
+			"PeriodicVsr": periodicVsr,
 		}, "layouts/main")
+	})
+
+	// POST Sales history
+	app.Post("/main/sales-report/update-date-periodic", func(c *fiber.Ctx) error {
+		log.Println("POST Sales history date range request-", c.Body())
+		return c.JSON(string(c.Body()))
 	})
 
 	// Add purchase
@@ -310,4 +390,13 @@ type ViewSale struct {
 	Item        string `json:"item"`
 	Time        string `json:"time"`
 	Date        string `json:"date"`
+}
+
+type ViewSalesReport struct {
+	TotalGrossRevenue float64 `json:"total_gross_revenue"`
+	TotalExpenses     float64 `json:"total_expenses"`
+	TotalNetRevenue   float64 `json:"total_net_revenue"`
+	IncomeTax         float64 `json:"income_tax"`
+	GrantLoan         float64 `json:"grant_loan"`
+	ProfitLoss        float64 `json:"profit_loss"`
 }

@@ -63,3 +63,9 @@
     ---- Product movement by last active subsequent operation hours (apex-line area chart)
 
     ---- Fruit consumption trend by month (high-area chart)
+
+5. Financial Aid
+
+--- Scrape the internet for all the available grants and list them down here.
+
+--- Need to implement AI for this scraping to watch the web for new contents(maybe make another microservice-)
