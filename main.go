@@ -274,10 +274,150 @@ func main() {
 		}, "layouts/main")
 	})
 
-	// POST Sales history
-	app.Post("/main/sales-report/update-date-periodic", func(c *fiber.Ctx) error {
-		log.Println("POST Sales history date range request-", c.Body())
-		return c.JSON(string(c.Body()))
+	type Dates struct {
+		StartDate string `json:"periodic_sd" xml:"periodic_sd" form:"periodic_sd"`
+		EndDate   string `json:"periodic_ed" xml:"periodic_ed" form:"periodic_ed"`
+	}
+
+	// POST Update periodic sales report
+	app.Post("/main/sales-report/update-periodic", func(c *fiber.Ctx) error {
+
+		d := new(Dates)
+		// parse body into struct
+		if err := c.BodyParser(d); err != nil {
+			log.Println("Error parsing dates into struct -", err)
+			return err
+		}
+
+		//extract only the dates
+		d.StartDate = strings.Split(d.StartDate, "T")[0]
+		d.EndDate = strings.Split(d.EndDate, "T")[0]
+
+		//Fetch from API Server for Periodic VSR
+		//follow the api specification from mims-datastore
+		url := apiServerAddr + "sales/find/" + d.StartDate + "-" + d.EndDate
+
+		client := http.Client{
+			Timeout: time.Second * 2, // Timeout after 2 seconds
+		}
+
+		req, err := http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.Println("Post request not completed -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		req.Header.Set("User-Agent", "mims-app")
+		res, err := client.Do(req)
+		if err != nil {
+			log.Println("Error occured while awaiting response -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		if res.Body != nil {
+			defer res.Body.Close()
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		_ = body
+		if err != nil {
+			log.Println("Error reading response body -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		var jsonSales struct {
+			Sales []JsonSale `json:"sales"`
+		}
+
+		//convert that string (body) to json
+		if err := json.Unmarshal(body, &jsonSales); err != nil {
+			log.Println("Error unmarshalling body into JSON (lifetime) -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		// Periodic VSR
+		periodicVsr := ViewSalesReport{}
+
+		// calcuating all the revenue of every sale ever made...
+		// i shouldnt be iterating as below
+		// not efficient. lets start thinking of this when shit hits the fan
+		for index := range jsonSales.Sales {
+			periodicVsr.TotalGrossRevenue += float64(jsonSales.Sales[index].Amount)
+		}
+
+		periodicVsr.TotalExpenses = helper.RoundTo(0.00, 2)
+		periodicVsr.TotalNetRevenue = helper.RoundTo(periodicVsr.TotalGrossRevenue-periodicVsr.TotalExpenses, 2)
+		periodicVsr.IncomeTax = helper.RoundTo(periodicVsr.TotalNetRevenue*0.12, 2)
+		periodicVsr.GrantLoan = helper.RoundTo(0.00, 2)
+		periodicVsr.ProfitLoss = helper.RoundTo(periodicVsr.TotalGrossRevenue+periodicVsr.GrantLoan-periodicVsr.TotalExpenses-periodicVsr.IncomeTax, 2)
+
+		// Fetch from API Server for Lifetime VSR
+		url = apiServerAddr + "sales/find/"
+
+		client = http.Client{
+			Timeout: time.Second * 2, // Timeout after 2 seconds
+		}
+
+		req, err = http.NewRequest(http.MethodGet, url, nil)
+		if err != nil {
+			log.Println("Post request not completed -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		req.Header.Set("User-Agent", "mims-app")
+		res, err = client.Do(req)
+		if err != nil {
+			log.Println("Error occured while awaiting response -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		if res.Body != nil {
+			defer res.Body.Close()
+		}
+
+		body, err = ioutil.ReadAll(res.Body)
+		_ = body
+		if err != nil {
+			log.Println("Error reading response body -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		//convert that string (body) to json
+		if err := json.Unmarshal(body, &jsonSales); err != nil {
+			log.Println("Error unmarshalling body into JSON (periodic) -", err)
+			//redirect back to /main/sales-report w/ toast saying error occured
+			return c.Redirect("/main/sales-report")
+		}
+
+		// Lifetime VSR
+		lifetimeVsr := ViewSalesReport{}
+
+		// calcuating all the revenue of every sale ever made...
+		// i shouldnt be iterating as below
+		// not efficient. lets start thinking of this when shit hits the fan
+		for index := range jsonSales.Sales {
+			lifetimeVsr.TotalGrossRevenue += float64(jsonSales.Sales[index].Amount)
+		}
+
+		lifetimeVsr.TotalExpenses = helper.RoundTo(0.00, 2)
+		lifetimeVsr.TotalNetRevenue = helper.RoundTo(lifetimeVsr.TotalGrossRevenue-lifetimeVsr.TotalExpenses, 2)
+		lifetimeVsr.IncomeTax = helper.RoundTo(lifetimeVsr.TotalNetRevenue*0.12, 2)
+		lifetimeVsr.GrantLoan = helper.RoundTo(0.00, 2)
+		lifetimeVsr.ProfitLoss = helper.RoundTo(lifetimeVsr.TotalGrossRevenue+lifetimeVsr.GrantLoan-lifetimeVsr.TotalExpenses-lifetimeVsr.IncomeTax, 2)
+
+		//pass it to the renderer
+		return c.Render("sales-report", fiber.Map{
+			"Title":       "Sales Analysis",
+			"PeriodicVsr": periodicVsr,
+			"LifetimeVsr": lifetimeVsr,
+		}, "layouts/main")
 	})
 
 	// Add purchase
