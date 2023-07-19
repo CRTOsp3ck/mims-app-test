@@ -11,45 +11,66 @@
 
         <div class="col-lg-8">
             <div class="card card-block card-stretch card-height print rounded">
-               <div class="card-header d-flex justify-content-between bg-primary header-invoice">
-                     <div class="iq-header-title">
+                <div class="card-header d-flex justify-content-between bg-primary header-invoice">
+                    <div class="iq-header-title">
                         <!-- <h4 class="card-title mb-0">Sales Analysis</h4> -->
-                     </div>
-               </div>
-               <div class="card-body">
+                    </div>
+                </div>
+                <div class="card-body">
                     <div class="col">
                         <div class="row mb-3">
                             <div class="col-lg-6 col-md-6 mt-4 mb-3">
                                 <div class="or-detail rounded">
-                                        <div class="p-3">
-                                            <h5 class="mb-3">Lifetime</h5>
-                                            <hr>
-                                            <div class="row mb-2">
-                                                <div class="col-md-6"><h6>Total Gross Revenue</h6></div>
-                                                <div class="col"><p style="color: green">RM {{ .LifetimeVsr.TotalGrossRevenue }}</p></div>
-                                                <!-- <div class="col"><p style="color: green">RM 6, 717.05</p></div> -->
+                                    <div class="p-3">
+                                        <h5 class="mb-3">Lifetime</h5>
+                                        <hr>
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <h6>Total Gross Revenue</h6>
                                             </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-6"><h6>Total Expenses</h6></div>
-                                                <div class="col"><p style="color: orangered;">RM {{ .LifetimeVsr.TotalExpenses }}</p></div>
+                                            <div class="col">
+                                                <p style="color: green">RM {{ .LifetimeVsr.TotalGrossRevenue }}</p>
                                             </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-6"><h6>Total Net Revenue</h6></div>
-                                                <div class="col"><p>RM {{ .LifetimeVsr.TotalNetRevenue }}</p></div>
+                                            <!-- <div class="col"><p style="color: green">RM 6, 717.05</p></div> -->
+                                        </div>
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <h6>Total Expenses</h6>
                                             </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-6"><h6>Income Tax</h6></div>
-                                                <div class="col"><p style="color: orangered;">RM {{ .LifetimeVsr.IncomeTax }}</p></div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6"><h6>Grant/Loan</h6></div>
-                                                <div class="col"><p style="color: green">RM {{ .LifetimeVsr.GrantLoan }}</p></div>
+                                            <div class="col">
+                                                <p style="color: orangered;">RM {{ .LifetimeVsr.TotalExpenses }}</p>
                                             </div>
                                         </div>
-                                        <div class="ttl-amt py-2 px-3 d-flex justify-content-between align-items-center">
-                                            <h6>Profit/Loss</h6>
-                                            <h3 style="color: green" class="font-weight-700">RM {{ .LifetimeVsr.ProfitLoss }}</h3>
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <h6>Total Net Revenue</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p>RM {{ .LifetimeVsr.TotalNetRevenue }}</p>
+                                            </div>
                                         </div>
+                                        <div class="row mb-2">
+                                            <div class="col-md-6">
+                                                <h6>Income Tax</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: orangered;">RM {{ .LifetimeVsr.IncomeTax }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6>Grant/Loan</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: green">RM {{ .LifetimeVsr.GrantLoan }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ttl-amt py-2 px-3 d-flex justify-content-between align-items-center">
+                                        <h6>Profit/Loss</h6>
+                                        <h3 style="color: green" class="font-weight-700">RM {{ .LifetimeVsr.ProfitLoss
+                                            }}</h3>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-lg-6 col-md-6 mt-4 mb-3">
@@ -61,65 +82,90 @@
                                             <div class="row mb-2">
                                                 <div class="col form-group">
                                                     <label style="font-size: smaller;">Start Date</label>
-                                                    <input type="datetime-local" class="form-control" id="periodic_sd" name="periodic_sd">
+                                                    <input type="datetime-local" class="form-control" id="periodic_sd"
+                                                        name="periodic_sd">
                                                 </div>
                                                 <div class="col form-group">
                                                     <label style="font-size: smaller;">End Date</label>
-                                                    <input type="datetime-local" class="form-control" id="periodic_ed" name="periodic_ed">
+                                                    <input type="datetime-local" class="form-control" id="periodic_ed"
+                                                        name="periodic_ed">
                                                 </div>
                                             </div>
                                             <div class="row mb-2">
                                                 <div class="col form-group">
-                                                    <button type="submit" class="btn btn-primary btn-block">Update</button>
+                                                    <button type="submit"
+                                                        class="btn btn-primary btn-block">Update</button>
                                                 </div>
                                             </div>
                                         </form>
                                         <hr>
                                         <div class="row mb-2">
-                                            <div class="col-md-6"><h6>Total Gross Revenue</h6></div>
-                                            <div class="col"><p style="color: green">RM {{ .PeriodicVsr.TotalGrossRevenue }}</p></div>
+                                            <div class="col-md-6">
+                                                <h6>Total Gross Revenue</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: green">RM {{ .PeriodicVsr.TotalGrossRevenue }}</p>
+                                            </div>
                                             <!-- <div class="col"><p style="color: green">RM 6, 717.05</p></div> -->
                                         </div>
                                         <div class="row mb-2">
-                                            <div class="col-md-6"><h6>Total Expenses</h6></div>
-                                            <div class="col"><p style="color: orangered;">RM {{ .PeriodicVsr.TotalExpenses }}</p></div>
+                                            <div class="col-md-6">
+                                                <h6>Total Expenses</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: orangered;">RM {{ .PeriodicVsr.TotalExpenses }}</p>
+                                            </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <div class="col-md-6"><h6>Total Net Revenue</h6></div>
-                                            <div class="col"><p>RM {{ .PeriodicVsr.TotalNetRevenue }}</p></div>
+                                            <div class="col-md-6">
+                                                <h6>Total Net Revenue</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p>RM {{ .PeriodicVsr.TotalNetRevenue }}</p>
+                                            </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <div class="col-md-6"><h6>Income Tax</h6></div>
-                                            <div class="col"><p style="color: orangered;">RM {{ .PeriodicVsr.IncomeTax }}</p></div>
+                                            <div class="col-md-6">
+                                                <h6>Income Tax</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: orangered;">RM {{ .PeriodicVsr.IncomeTax }}</p>
+                                            </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-md-6"><h6>Grant/Loan</h6></div>
-                                            <div class="col"><p style="color: green">RM {{ .PeriodicVsr.GrantLoan }}</p></div>
+                                            <div class="col-md-6">
+                                                <h6>Grant/Loan</h6>
+                                            </div>
+                                            <div class="col">
+                                                <p style="color: green">RM {{ .PeriodicVsr.GrantLoan }}</p>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="ttl-amt py-2 px-3 d-flex justify-content-between align-items-center">
                                         <h6>Profit/Loss</h6>
-                                        <h3 style="color: green" class="font-weight-700">RM {{ .PeriodicVsr.ProfitLoss }}</h3>
+                                        <h3 style="color: green" class="font-weight-700">RM {{ .PeriodicVsr.ProfitLoss
+                                            }}</h3>
                                     </div>
+                                </div>
                             </div>
-                            </div>
-                        </div>     
+                        </div>
                         <div class="row mb-3">
                             <div class="col-sm-12">
-                            <b class="text-danger">Note:</b>
-                            <p class="mb-0">Total cost is averaged out from real business scenario and hardcoded, since i havent written the expenses modules yet.</p>
+                                <b class="text-danger">Note:</b>
+                                <p class="mb-0">Total cost is averaged out from real business scenario and hardcoded,
+                                    since i havent written the expenses modules yet.</p>
                             </div>
-                        </div>     
-                    </div>              
-               </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-         </div>   
-        <div class="col-lg-8">  
+        </div>
+        <div class="col-lg-8">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
                         <h4 class="card-title">Income vs Expenses</h4>
-                    </div>                        
+                    </div>
                     <div class="card-header-toolbar d-flex align-items-center">
                         <div class="dropdown">
                             <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
@@ -134,7 +180,7 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="card-body pb-2">
                     <div class="d-flex flex-wrap align-items-center mt-2">
                         <div class="d-flex align-items-center progress-order-left">
@@ -174,7 +220,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">  
+        <div class="col-lg-4">
             <div class="card card-block card-stretch card-height-helf">
                 <div class="card-body">
                     <div class="d-flex align-items-top justify-content-between">
@@ -226,12 +272,12 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">  
+        <div class="col-lg-6">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
                         <h4 class="card-title">Net revenue vs Gross revenue vs Free cash flow</h4>
-                    </div>                        
+                    </div>
                     <div class="card-header-toolbar d-flex align-items-center">
                         <div class="dropdown">
                             <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
@@ -246,18 +292,18 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="card-body pt-0">
                     <div id="apex-column"></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">  
+        <div class="col-lg-6">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
                         <h4 class="card-title">Product trend by month</h4>
-                    </div>                        
+                    </div>
                     <div class="card-header-toolbar d-flex align-items-center">
                         <div class="dropdown">
                             <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
@@ -272,18 +318,18 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="card-body pt-0">
                     <div id="apex-basic"></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">  
+        <div class="col-lg-6">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
                         <h4 class="card-title">Product movement by last active subsequent operation hours</h4>
-                    </div>                        
+                    </div>
                     <div class="card-header-toolbar d-flex align-items-center">
                         <div class="dropdown">
                             <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
@@ -298,18 +344,18 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="card-body pt-0">
                     <div id="apex-line-area"></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">  
+        <div class="col-lg-6">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
                         <h4 class="card-title">Fruit consumption trend by month</h4>
-                    </div>                        
+                    </div>
                     <div class="card-header-toolbar d-flex align-items-center">
                         <div class="dropdown">
                             <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
@@ -324,7 +370,7 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
                 <div class="card-body pt-0">
                     <div id="high-area-chart"></div>
                 </div>
@@ -333,3 +379,9 @@
     </div>
     <!-- Page end  -->
 </div>
+
+
+{{define "js"}}
+
+
+{{end}}

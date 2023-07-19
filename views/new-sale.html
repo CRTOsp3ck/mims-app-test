@@ -150,9 +150,9 @@
     const timeElapsed = Date.now();
     const today = new Date(timeElapsed);
     
-    const dateControl = document.querySelector('input[type="datetime-local"]');
+    // const dateControl = document.querySelector('input[type="datetime-local"]');
     var today_formatted = today.getFullYear()+"-"+(('0' + (today.getMonth()+1)).slice(-2))+"-"+('0' + today.getDate()).slice(-2)+"T"+('0' + today.getHours()).slice(-2)+":"+('0' + today.getMinutes()).slice(-2);
-    dateControl.value = today_formatted;
+    document.getElementById("sale_time_date").value = today_formatted;
     console.log("Date: "+today_formatted);
 
     //Products hardcoded - fuck it for now!
