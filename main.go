@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,10 +17,10 @@ import (
 )
 
 // for production
-// const apiServerAddr string = "http://127.0.0.1:3001/"
+const apiServerAddr string = "http://127.0.0.1:3001/"
 
 // for development
-const apiServerAddr string = "http://104.248.98.237:3001/"
+// const apiServerAddr string = "http://104.248.98.237:3001/"
 
 func main() {
 	// Create a new engine
@@ -63,8 +64,10 @@ func main() {
 		var qty int
 		var url string
 		var itemId int
+		var groupSaleId int
 		paymentType, _ := parsePaymentMethodToInt(ns.PaymentMethod)
 		operationId := 1
+		groupSaleId = 0
 
 		//i need to change DB structure to accommodate ever growing product list.
 		//this is hardcoded now, since we only selling 1 product. Its ok for now...
@@ -72,8 +75,8 @@ func main() {
 			amt = ns.Qty_FreshJuice * 8
 			qty = ns.Qty_FreshJuice
 			itemId = 1
-			url = apiServerAddr + "sales/new/" +
-				strconv.Itoa(amt) + "-" + strconv.Itoa(qty) + "-" + strconv.Itoa(paymentType) + "-" + strconv.Itoa(operationId) + "-" + strconv.Itoa(itemId)
+			url = apiServerAddr + "sa/new/" +
+				strconv.Itoa(amt) + "-" + strconv.Itoa(qty) + "-" + strconv.Itoa(paymentType) + "-" + strconv.Itoa(operationId) + "-" + strconv.Itoa(itemId) + "-" + strconv.Itoa(groupSaleId)
 		}
 
 		client := http.Client{
@@ -115,7 +118,7 @@ func main() {
 
 	// Sales history
 	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
-		url := apiServerAddr + "sales/find/"
+		url := apiServerAddr + "sa/find/"
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -140,40 +143,40 @@ func main() {
 			defer res.Body.Close()
 		}
 
-		body, err := ioutil.ReadAll(res.Body)
-		_ = body
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			log.Println("Error reading response body -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
 			return c.Redirect("/main/sales-history")
 		}
 
-		var jsonSales struct {
-			Sales []JsonSale `json:"sales"`
-		}
+		// log.Println("Body -", string(body))
+		var sales []JsonSale
 
 		//convert that string (body) to json
-		if err := json.Unmarshal(body, &jsonSales); err != nil {
+		if err := json.Unmarshal(body, &sales); err != nil {
 			log.Println("Error unmarshalling body into JSON -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
 			return c.Redirect("/main/sales-history")
 		}
 
+		log.Println(sales[0].CreatedAt)
+
 		//create an array of view sales with that json information..
 		viewSales := []*ViewSale{}
 
-		for index := range jsonSales.Sales {
+		for index := range sales {
 			//parsing some stuff before hand
-			paymentType, _ := parsePaymentMethodToString(jsonSales.Sales[index].PaymentType)
-			operation, _ := parseOperationToString(jsonSales.Sales[index].OperationID)
-			item, _ := parseItemToString(jsonSales.Sales[index].ItemID)
-			time := strings.Split(strings.Split(jsonSales.Sales[index].CreatedAt.String(), " ")[1], ".")[0]
-			date := strings.Split(jsonSales.Sales[index].CreatedAt.String(), " ")[0]
+			paymentType, _ := parsePaymentMethodToString(sales[index].PaymentType)
+			operation, _ := parseOperationToString(sales[index].OperationID)
+			item, _ := parseItemToString(sales[index].ItemID)
+			time := strings.Split(strings.Split(sales[index].CreatedAt.String(), " ")[1], ".")[0]
+			date := strings.Split(sales[index].CreatedAt.String(), " ")[0]
 
 			viewSale := ViewSale{
-				ID:          jsonSales.Sales[index].ID,
-				Amount:      "RM" + strconv.FormatFloat(float64(jsonSales.Sales[index].Amount), 'f', -1, 64),
-				Qty:         strconv.FormatFloat(float64(jsonSales.Sales[index].Qty), 'f', -1, 64) + " unit(s)",
+				ID:          sales[index].ID,
+				Amount:      "RM" + strconv.FormatFloat(float64(sales[index].Amount), 'f', -1, 64),
+				Qty:         strconv.FormatFloat(float64(sales[index].Qty), 'f', -1, 64) + " unit(s)",
 				PaymentType: paymentType,
 				Operation:   operation,
 				Item:        item,
@@ -195,7 +198,7 @@ func main() {
 
 	// Sales report
 	app.Get("/main/sales-report", func(c *fiber.Ctx) error {
-		url := apiServerAddr + "sales/find/"
+		url := apiServerAddr + "sa/find/"
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -233,7 +236,7 @@ func main() {
 		}
 
 		//convert that string (body) to json
-		if err := json.Unmarshal(body, &jsonSales); err != nil {
+		if err := json.Unmarshal(body, &jsonSales.Sales); err != nil {
 			log.Println("Error unmarshalling body into JSON -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
 			return c.Redirect("/main/sales-report")
@@ -295,7 +298,7 @@ func main() {
 
 		//Fetch from API Server for Periodic VSR
 		//follow the api specification from mims-datastore
-		url := apiServerAddr + "sales/find/" + d.StartDate + "-" + d.EndDate
+		url := apiServerAddr + "sa/find/" + d.StartDate + "-" + d.EndDate
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -320,7 +323,7 @@ func main() {
 			defer res.Body.Close()
 		}
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		_ = body
 		if err != nil {
 			log.Println("Error reading response body -", err)
@@ -333,7 +336,7 @@ func main() {
 		}
 
 		//convert that string (body) to json
-		if err := json.Unmarshal(body, &jsonSales); err != nil {
+		if err := json.Unmarshal(body, &jsonSales.Sales); err != nil {
 			log.Println("Error unmarshalling body into JSON (lifetime) -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
 			return c.Redirect("/main/sales-report")
@@ -390,7 +393,7 @@ func main() {
 		}
 
 		//convert that string (body) to json
-		if err := json.Unmarshal(body, &jsonSales); err != nil {
+		if err := json.Unmarshal(body, &jsonSales.Sales); err != nil {
 			log.Println("Error unmarshalling body into JSON (periodic) -", err)
 			//redirect back to /main/sales-report w/ toast saying error occured
 			return c.Redirect("/main/sales-report")
@@ -511,14 +514,15 @@ type FormDataNewSale struct {
 }
 
 type JsonSale struct {
-	ID          int       `json:"id"`
+	ID          int       `json:"ID"`
 	Amount      float32   `json:"amount"`
-	Qty         float32   `json:"quantity"` //this is float and not int bcos in case we plan to sell by weight, then it wouldnt make sense to use int
+	Qty         float32   `json:"qty"` //this is float and not int bcos in case we plan to sell by weight, then it wouldnt make sense to use int
 	PaymentType int       `json:"payment_type"`
 	OperationID int       `json:"operation_id"`
 	ItemID      int       `json:"item_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	GroupSaleID int       `json:"group_sale_id"`
+	CreatedAt   time.Time `json:"CreatedAt"`
+	UpdatedAt   time.Time `json:"UpdatedAt"`
 }
 
 type ViewSale struct {
