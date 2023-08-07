@@ -426,9 +426,7 @@ func main() {
 		}
 
 		//extract only the dates
-		log.Println("StartDate -", d.StartDate)
 		d.StartDate = strings.Split(d.StartDate, "T")[0]
-		log.Println("EndDate -", d.EndDate)
 		d.EndDate = strings.Split(d.EndDate, "T")[0]
 
 		//Fetch from API Server for Periodic VSR
