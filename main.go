@@ -111,6 +111,23 @@ func main() {
 		})
 	})
 
+	// Auth - Logout
+	app.Post("/auth/logout", func(c *fiber.Ctx) error {
+		// Clear cookie
+		c.ClearCookie("token")
+
+		// Set cookie expiration to past
+		c.Cookie(&fiber.Cookie{
+			Name: "token",
+			// Set expiry date to the past
+			Expires:  time.Now().Add(-(time.Hour * 2)),
+			HTTPOnly: true,
+			SameSite: "lax",
+		})
+
+		return c.Redirect("/main/login")
+	})
+
 	// Dashboard
 	app.Get("/main", func(c *fiber.Ctx) error {
 		if !checkAuthState(c) {
@@ -409,7 +426,9 @@ func main() {
 		}
 
 		//extract only the dates
+		log.Println("StartDate -", d.StartDate)
 		d.StartDate = strings.Split(d.StartDate, "T")[0]
+		log.Println("EndDate -", d.EndDate)
 		d.EndDate = strings.Split(d.EndDate, "T")[0]
 
 		//Fetch from API Server for Periodic VSR
@@ -479,7 +498,7 @@ func main() {
 		periodicVsr.ProfitLoss = helper.RoundTo(periodicVsr.TotalGrossRevenue+periodicVsr.GrantLoan-periodicVsr.TotalExpenses-periodicVsr.IncomeTax, 2)
 
 		// Fetch from API Server for Lifetime VSR
-		url = apiServerAddr + "/sales/find/"
+		url = apiServerAddr + "/sa/find/"
 
 		client = http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -558,7 +577,6 @@ func main() {
 		//pass it to the renderer
 		return c.Render("add-purchase", fiber.Map{
 			"Title": "Add Purchase",
-			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -573,7 +591,6 @@ func main() {
 		//pass it to the renderer
 		return c.Render("purchase-history", fiber.Map{
 			"Title": "List Purchase",
-			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
