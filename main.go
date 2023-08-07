@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,10 +18,10 @@ import (
 )
 
 // for production
-const apiServerAddr string = "http://127.0.0.1:3001/"
+const apiServerAddr string = "http://127.0.0.1:3001"
 
 // for development
-// const apiServerAddr string = "http://104.248.98.237:3001/"
+// const apiServerAddr string = "http://104.248.98.237:3001"
 
 func main() {
 	// Create a new engine
@@ -38,11 +39,78 @@ func main() {
 		})
 	})
 
+	// Auth - Login
+	app.Post("/auth/login", func(c *fiber.Ctx) error {
+		auth := new(FormAuth)
+		if err := c.BodyParser(auth); err != nil {
+			return err
+		}
+
+		url := apiServerAddr + "/auth/login"
+
+		bytesObj := []byte(fmt.Sprintf(`{
+			"identity": %q,
+			"password": %q
+		}`, auth.Identity, auth.Password))
+		body := bytes.NewBuffer(bytesObj)
+		// log.Println("BODY - ", body)
+
+		req, err := http.NewRequest(http.MethodPost, url, body)
+		if err != nil {
+			log.Println("Post request not completed -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/auth/login")
+		}
+
+		req.Header.Set("User-Agent", "mims-app")
+		req.Header.Add("Content-Type", "application/json")
+		client := http.Client{
+			Timeout: time.Second * 2, // Timeout after 2 seconds
+		}
+		res, err := client.Do(req)
+		if err != nil {
+			log.Println("Error occured while awaiting response -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/auth/login")
+		}
+
+		if res.Body != nil {
+			defer res.Body.Close()
+		}
+
+		b, err := io.ReadAll(res.Body)
+		log.Println("BODY - ", string(b))
+		_ = b // i should return the body
+		if err != nil {
+			log.Println("Error reading response body -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/auth/login")
+		}
+
+		var resp ResponseBody
+		json.Unmarshal([]byte(b), &resp)
+
+		//store the jwt somewhere (storing in the browser for now)
+		cookie := &fiber.Cookie{
+			Name:   "jwt-token", // <- should be any unique key you want
+			Value:  resp.Data,   // <- the token after encoded by SecureCookie
+			Path:   "/",
+			Secure: true,
+		}
+		c.Cookie(cookie)
+
+		return c.Render("dashboard", fiber.Map{
+			"Title": "Dashboard",
+			"Auth":  checkAuthState(c),
+		}, "layouts/main")
+	})
+
 	// Dashboard
 	app.Get("/main", func(c *fiber.Ctx) error {
 		// Render dashboard within layouts/main
 		return c.Render("dashboard", fiber.Map{
 			"Title": "Dashboard",
+			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -50,12 +118,13 @@ func main() {
 	app.Get("/main/new-sale", func(c *fiber.Ctx) error {
 		return c.Render("new-sale", fiber.Map{
 			"Title": "New Sale",
+			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// POST New Sale
 	app.Post("/main/new-sale/", func(c *fiber.Ctx) error {
-		ns := new(FormDataNewSale)
+		ns := new(FormNewSale)
 		if err := c.BodyParser(ns); err != nil {
 			return err
 		}
@@ -75,12 +144,8 @@ func main() {
 			amt = ns.Qty_FreshJuice * 8
 			qty = ns.Qty_FreshJuice
 			itemId = 1
-			url = apiServerAddr + "sa/new/" +
+			url = apiServerAddr + "/sa/new/" +
 				strconv.Itoa(amt) + "-" + strconv.Itoa(qty) + "-" + strconv.Itoa(paymentType) + "-" + strconv.Itoa(operationId) + "-" + strconv.Itoa(itemId) + "-" + strconv.Itoa(groupSaleId)
-		}
-
-		client := http.Client{
-			Timeout: time.Second * 2, // Timeout after 2 seconds
 		}
 
 		req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -91,6 +156,9 @@ func main() {
 		}
 
 		req.Header.Set("User-Agent", "mims-app")
+		client := http.Client{
+			Timeout: time.Second * 2, // Timeout after 2 seconds
+		}
 		res, err := client.Do(req)
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
@@ -102,8 +170,8 @@ func main() {
 			defer res.Body.Close()
 		}
 
-		body, err := ioutil.ReadAll(res.Body)
-		_ = body
+		body, err := io.ReadAll(res.Body)
+		_ = body // i should return the body
 		if err != nil {
 			log.Println("Error reading response body -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
@@ -118,7 +186,7 @@ func main() {
 
 	// Sales history
 	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
-		url := apiServerAddr + "sa/find/"
+		url := apiServerAddr + "/sa/find/"
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -131,6 +199,10 @@ func main() {
 			return c.Redirect("/main/sales-history")
 		}
 
+		// Create a Bearer string by appending string access token
+		bearer := "Bearer " + c.Cookies("Value")
+		// add authorization header to the req
+		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
 		res, err := client.Do(req)
 		if err != nil {
@@ -159,8 +231,6 @@ func main() {
 			//redirect back to /main/new-sale w/ toast saying error occured
 			return c.Redirect("/main/sales-history")
 		}
-
-		log.Println(sales[0].CreatedAt)
 
 		//create an array of view sales with that json information..
 		viewSales := []*ViewSale{}
@@ -193,12 +263,13 @@ func main() {
 		return c.Render("sales-history", fiber.Map{
 			"Title": "Sales History",
 			"Sales": viewSales,
+			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// Sales report
 	app.Get("/main/sales-report", func(c *fiber.Ctx) error {
-		url := apiServerAddr + "sa/find/"
+		url := apiServerAddr + "/sa/find/"
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -211,6 +282,10 @@ func main() {
 			return c.Redirect("/main/sales-report")
 		}
 
+		// Create a Bearer string by appending string access token
+		bearer := "Bearer " + c.Cookies("Value")
+		// add authorization header to the req
+		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
 		res, err := client.Do(req)
 		if err != nil {
@@ -223,7 +298,7 @@ func main() {
 			defer res.Body.Close()
 		}
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		_ = body
 		if err != nil {
 			log.Println("Error reading response body -", err)
@@ -274,6 +349,7 @@ func main() {
 			"Title":       "Sales Analysis",
 			"LifetimeVsr": lifetimeVsr,
 			"PeriodicVsr": periodicVsr,
+			"Auth":        checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -298,7 +374,7 @@ func main() {
 
 		//Fetch from API Server for Periodic VSR
 		//follow the api specification from mims-datastore
-		url := apiServerAddr + "sa/find/" + d.StartDate + "-" + d.EndDate
+		url := apiServerAddr + "/sa/find/" + d.StartDate + "-" + d.EndDate
 
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -359,7 +435,7 @@ func main() {
 		periodicVsr.ProfitLoss = helper.RoundTo(periodicVsr.TotalGrossRevenue+periodicVsr.GrantLoan-periodicVsr.TotalExpenses-periodicVsr.IncomeTax, 2)
 
 		// Fetch from API Server for Lifetime VSR
-		url = apiServerAddr + "sales/find/"
+		url = apiServerAddr + "/sales/find/"
 
 		client = http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
@@ -384,7 +460,7 @@ func main() {
 			defer res.Body.Close()
 		}
 
-		body, err = ioutil.ReadAll(res.Body)
+		body, err = io.ReadAll(res.Body)
 		_ = body
 		if err != nil {
 			log.Println("Error reading response body -", err)
@@ -420,6 +496,7 @@ func main() {
 			"Title":       "Sales Analysis",
 			"PeriodicVsr": periodicVsr,
 			"LifetimeVsr": lifetimeVsr,
+			"Auth":        checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -428,14 +505,16 @@ func main() {
 		//pass it to the renderer
 		return c.Render("add-purchase", fiber.Map{
 			"Title": "Add Purchase",
+			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// List purchase
-	app.Get("/main/list-purchase", func(c *fiber.Ctx) error {
+	app.Get("/main/purchase-history", func(c *fiber.Ctx) error {
 		//pass it to the renderer
-		return c.Render("list-purchase", fiber.Map{
+		return c.Render("purchase-history", fiber.Map{
 			"Title": "List Purchase",
+			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -505,7 +584,68 @@ func parseItemToString(itemId int) (string, error) {
 	}
 }
 
-type FormDataNewSale struct {
+func checkAuthState(c *fiber.Ctx) bool {
+	// send request to /auth
+	url := apiServerAddr + "/auth/sta"
+
+	client := http.Client{
+		Timeout: time.Second * 2, // Timeout after 2 seconds
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Println("Post request not completed -", err)
+		return false
+	}
+
+	// Create a Bearer string by appending string access token
+	bearer := "Bearer " + c.Cookies("Value")
+	// add authorization header to the req
+	req.Header.Add("Authorization", bearer)
+	req.Header.Set("User-Agent", "mims-app")
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("Error occured while awaiting response -", err)
+		return false
+	}
+
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println("Error reading response body -", err)
+		return false
+	}
+
+	var respBodyJson ResponseBody
+
+	// if received response body is unmarshallable (jwt valid)
+	if err := json.Unmarshal(body, &respBodyJson); err != nil {
+		log.Println("Token in cookie is active.")
+		return true
+	}
+
+	// if received response body is marshallable (jwt expired)
+	log.Println("Error unmarshalling body into JSON -", err)
+	return false
+}
+
+// I should use this format when returning json from server (nest the data json inside this json?)
+type ResponseBody struct {
+	Data    string `json:"data"`
+	Message int    `json:"message"`
+	Status  string `json:"status"`
+}
+
+type FormAuth struct {
+	Identity   string `json:"identity" xml:"identity" form:"identity"`
+	Password   string `json:"password" xml:"password" form:"password"`
+	RememberMe bool   `json:"remember_me" xml:"remember_me" form:"remember_me"`
+}
+
+type FormNewSale struct {
 	Sale_TimeDate  string `json:"sale_time_date" xml:"sale_time_date" form:"sale_time_date"`
 	PaymentMethod  string `json:"payment_type" xml:"payment_type" form:"payment_type"`
 	Qty_FreshJuice int    `json:"fresh_juice_qty" xml:"fresh_juice_qty" form:"fresh_juice_qty"`
