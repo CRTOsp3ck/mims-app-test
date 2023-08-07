@@ -59,7 +59,7 @@ func main() {
 		if err != nil {
 			log.Println("Post request not completed -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
-			return c.Redirect("/auth/login")
+			return c.Redirect("/main/login")
 		}
 
 		req.Header.Set("User-Agent", "mims-app")
@@ -71,7 +71,7 @@ func main() {
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
-			return c.Redirect("/auth/login")
+			return c.Redirect("/main/login")
 		}
 
 		if res.Body != nil {
@@ -79,51 +79,73 @@ func main() {
 		}
 
 		b, err := io.ReadAll(res.Body)
-		log.Println("BODY - ", string(b))
-		_ = b // i should return the body
 		if err != nil {
 			log.Println("Error reading response body -", err)
 			//redirect back to /main/new-sale w/ toast saying error occured
-			return c.Redirect("/auth/login")
+			return c.Redirect("/main/login")
 		}
 
-		var resp ResponseBody
-		json.Unmarshal([]byte(b), &resp)
-
-		//store the jwt somewhere (storing in the browser for now)
-		cookie := &fiber.Cookie{
-			Name:   "jwt-token", // <- should be any unique key you want
-			Value:  resp.Data,   // <- the token after encoded by SecureCookie
-			Path:   "/",
-			Secure: true,
+		var respBody ResponseBody
+		err = json.Unmarshal(b, &respBody)
+		if err != nil {
+			log.Println("Error unmarshalling response body -", err)
+			//redirect back to /main/new-sale w/ toast saying error occured
+			return c.Redirect("/main/login")
 		}
+
+		// Create cookie
+		cookie := new(fiber.Cookie)
+		cookie.Name = "token"
+		cookie.Value = respBody.Data
+		cookie.Expires = time.Now().Add(24 * time.Hour)
+
+		// Set cookie
 		c.Cookie(cookie)
 
-		return c.Render("dashboard", fiber.Map{
-			"Title": "Dashboard",
-			"Auth":  checkAuthState(c),
-		}, "layouts/main")
+		return c.Redirect("/main")
+	})
+
+	app.Get("/main/login", func(c *fiber.Ctx) error {
+		return c.Render("login", fiber.Map{
+			"Title": "Login",
+		})
 	})
 
 	// Dashboard
 	app.Get("/main", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		// Render dashboard within layouts/main
 		return c.Render("dashboard", fiber.Map{
 			"Title": "Dashboard",
-			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// New Sale
 	app.Get("/main/new-sale", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		return c.Render("new-sale", fiber.Map{
 			"Title": "New Sale",
-			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// POST New Sale
 	app.Post("/main/new-sale/", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		ns := new(FormNewSale)
 		if err := c.BodyParser(ns); err != nil {
 			return err
@@ -155,7 +177,11 @@ func main() {
 			return c.Redirect("/main/new-sale")
 		}
 
+		// add authorization header to the req
+		bearer := "Bearer " + c.Cookies("token")
+		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
+
 		client := http.Client{
 			Timeout: time.Second * 2, // Timeout after 2 seconds
 		}
@@ -186,6 +212,12 @@ func main() {
 
 	// Sales history
 	app.Get("/main/sales-history", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		url := apiServerAddr + "/sa/find/"
 
 		client := http.Client{
@@ -199,11 +231,11 @@ func main() {
 			return c.Redirect("/main/sales-history")
 		}
 
-		// Create a Bearer string by appending string access token
-		bearer := "Bearer " + c.Cookies("Value")
 		// add authorization header to the req
+		bearer := "Bearer " + c.Cookies("token")
 		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
@@ -263,12 +295,17 @@ func main() {
 		return c.Render("sales-history", fiber.Map{
 			"Title": "Sales History",
 			"Sales": viewSales,
-			"Auth":  checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// Sales report
 	app.Get("/main/sales-report", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		url := apiServerAddr + "/sa/find/"
 
 		client := http.Client{
@@ -282,11 +319,11 @@ func main() {
 			return c.Redirect("/main/sales-report")
 		}
 
-		// Create a Bearer string by appending string access token
-		bearer := "Bearer " + c.Cookies("Value")
 		// add authorization header to the req
+		bearer := "Bearer " + c.Cookies("token")
 		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
@@ -312,8 +349,7 @@ func main() {
 
 		//convert that string (body) to json
 		if err := json.Unmarshal(body, &jsonSales.Sales); err != nil {
-			log.Println("Error unmarshalling body into JSON -", err)
-			//redirect back to /main/new-sale w/ toast saying error occured
+			log.Println("Error unmarshalling body to json -", err)
 			return c.Redirect("/main/sales-report")
 		}
 
@@ -349,7 +385,6 @@ func main() {
 			"Title":       "Sales Analysis",
 			"LifetimeVsr": lifetimeVsr,
 			"PeriodicVsr": periodicVsr,
-			"Auth":        checkAuthState(c),
 		}, "layouts/main")
 	})
 
@@ -360,6 +395,11 @@ func main() {
 
 	// POST Update periodic sales report
 	app.Post("/main/sales-report/update-periodic", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
 
 		d := new(Dates)
 		// parse body into struct
@@ -387,7 +427,11 @@ func main() {
 			return c.Redirect("/main/sales-report")
 		}
 
+		// add authorization header to the req
+		bearer := "Bearer " + c.Cookies("token")
+		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
+
 		res, err := client.Do(req)
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
@@ -448,7 +492,11 @@ func main() {
 			return c.Redirect("/main/sales-report")
 		}
 
+		// add authorization header to the req
+		bearer = "Bearer " + c.Cookies("token")
+		req.Header.Add("Authorization", bearer)
 		req.Header.Set("User-Agent", "mims-app")
+
 		res, err = client.Do(req)
 		if err != nil {
 			log.Println("Error occured while awaiting response -", err)
@@ -496,12 +544,17 @@ func main() {
 			"Title":       "Sales Analysis",
 			"PeriodicVsr": periodicVsr,
 			"LifetimeVsr": lifetimeVsr,
-			"Auth":        checkAuthState(c),
 		}, "layouts/main")
 	})
 
 	// Add purchase
 	app.Get("/main/add-purchase", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		//pass it to the renderer
 		return c.Render("add-purchase", fiber.Map{
 			"Title": "Add Purchase",
@@ -511,6 +564,12 @@ func main() {
 
 	// List purchase
 	app.Get("/main/purchase-history", func(c *fiber.Ctx) error {
+		if !checkAuthState(c) {
+			return c.Render("login", fiber.Map{
+				"Title": "Login",
+			})
+		}
+
 		//pass it to the renderer
 		return c.Render("purchase-history", fiber.Map{
 			"Title": "List Purchase",
@@ -598,11 +657,12 @@ func checkAuthState(c *fiber.Ctx) bool {
 		return false
 	}
 
-	// Create a Bearer string by appending string access token
-	bearer := "Bearer " + c.Cookies("Value")
+	// create a Bearer string by appending string access token
+	bearer := "Bearer " + c.Cookies("token")
 	// add authorization header to the req
 	req.Header.Add("Authorization", bearer)
 	req.Header.Set("User-Agent", "mims-app")
+
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println("Error occured while awaiting response -", err)
@@ -619,23 +679,27 @@ func checkAuthState(c *fiber.Ctx) bool {
 		return false
 	}
 
-	var respBodyJson ResponseBody
+	var respBody ResponseBody
 
-	// if received response body is unmarshallable (jwt valid)
-	if err := json.Unmarshal(body, &respBodyJson); err != nil {
-		log.Println("Token in cookie is active.")
+	if err := json.Unmarshal(body, &respBody); err != nil {
+		log.Println("Error unmarshalling response body -", err)
+		return false
+	}
+
+	if respBody.Message == "Invalid or expired JWT" {
+		return false
+	} else if respBody.Message == "authenticated" {
 		return true
 	}
 
-	// if received response body is marshallable (jwt expired)
-	log.Println("Error unmarshalling body into JSON -", err)
+	// hmm?
 	return false
 }
 
 // I should use this format when returning json from server (nest the data json inside this json?)
 type ResponseBody struct {
 	Data    string `json:"data"`
-	Message int    `json:"message"`
+	Message string `json:"message"`
 	Status  string `json:"status"`
 }
 
