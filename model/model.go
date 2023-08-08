@@ -54,3 +54,8 @@ type ViewSalesReport struct {
 	GrantLoan         float64 `json:"grant_loan"`
 	ProfitLoss        float64 `json:"profit_loss"`
 }
+
+type Dates struct {
+	StartDate string `json:"periodic_sd" xml:"periodic_sd" form:"periodic_sd"`
+	EndDate   string `json:"periodic_ed" xml:"periodic_ed" form:"periodic_ed"`
+}
