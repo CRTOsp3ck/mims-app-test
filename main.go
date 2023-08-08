@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/CRTOsp3ck/mims-app/helper"
+	"github.com/CRTOsp3ck/mims-app/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
 )
@@ -41,7 +42,7 @@ func main() {
 
 	// Auth - Login
 	app.Post("/auth/login", func(c *fiber.Ctx) error {
-		auth := new(FormAuth)
+		auth := new(model.FormAuth)
 		if err := c.BodyParser(auth); err != nil {
 			return err
 		}
@@ -85,7 +86,7 @@ func main() {
 			return c.Redirect("/main/login")
 		}
 
-		var respBody ResponseBody
+		var respBody model.ResponseBody
 		err = json.Unmarshal(b, &respBody)
 		if err != nil {
 			log.Println("Error unmarshalling response body -", err)
@@ -163,7 +164,7 @@ func main() {
 			})
 		}
 
-		ns := new(FormNewSale)
+		ns := new(model.FormNewSale)
 		if err := c.BodyParser(ns); err != nil {
 			return err
 		}
@@ -272,7 +273,7 @@ func main() {
 		}
 
 		// log.Println("Body -", string(body))
-		var sales []JsonSale
+		var sales []model.JsonSale
 
 		//convert that string (body) to json
 		if err := json.Unmarshal(body, &sales); err != nil {
@@ -282,7 +283,7 @@ func main() {
 		}
 
 		//create an array of view sales with that json information..
-		viewSales := []*ViewSale{}
+		viewSales := []*model.ViewSale{}
 
 		for index := range sales {
 			//parsing some stuff before hand
@@ -292,7 +293,7 @@ func main() {
 			time := strings.Split(strings.Split(sales[index].CreatedAt.String(), " ")[1], ".")[0]
 			date := strings.Split(sales[index].CreatedAt.String(), " ")[0]
 
-			viewSale := ViewSale{
+			viewSale := model.ViewSale{
 				ID:          sales[index].ID,
 				Amount:      "RM" + strconv.FormatFloat(float64(sales[index].Amount), 'f', -1, 64),
 				Qty:         strconv.FormatFloat(float64(sales[index].Qty), 'f', -1, 64) + " unit(s)",
@@ -361,7 +362,7 @@ func main() {
 		}
 
 		var jsonSales struct {
-			Sales []JsonSale `json:"sales"`
+			Sales []model.JsonSale `json:"sales"`
 		}
 
 		//convert that string (body) to json
@@ -371,7 +372,7 @@ func main() {
 		}
 
 		// Lifetime VSR
-		lifetimeVsr := ViewSalesReport{}
+		lifetimeVsr := model.ViewSalesReport{}
 
 		// calcuating all the revenue of every sale ever made...
 		// i shouldnt be iterating as below
@@ -389,7 +390,7 @@ func main() {
 		// Periodic VSR
 		// It will be the same as lifetime when page loads
 		// maybe i should set the default range as the start of that current month until the last day of operation in that month
-		periodicVsr := ViewSalesReport{}
+		periodicVsr := model.ViewSalesReport{}
 		periodicVsr.TotalGrossRevenue = lifetimeVsr.TotalGrossRevenue
 		periodicVsr.TotalExpenses = lifetimeVsr.TotalExpenses
 		periodicVsr.TotalNetRevenue = lifetimeVsr.TotalNetRevenue
@@ -469,7 +470,7 @@ func main() {
 		}
 
 		var jsonSales struct {
-			Sales []JsonSale `json:"sales"`
+			Sales []model.JsonSale `json:"sales"`
 		}
 
 		//convert that string (body) to json
@@ -480,7 +481,7 @@ func main() {
 		}
 
 		// Periodic VSR
-		periodicVsr := ViewSalesReport{}
+		periodicVsr := model.ViewSalesReport{}
 
 		// calcuating all the revenue of every sale ever made...
 		// i shouldnt be iterating as below
@@ -541,7 +542,7 @@ func main() {
 		}
 
 		// Lifetime VSR
-		lifetimeVsr := ViewSalesReport{}
+		lifetimeVsr := model.ViewSalesReport{}
 
 		// calcuating all the revenue of every sale ever made...
 		// i shouldnt be iterating as below
@@ -599,7 +600,7 @@ func main() {
 	log.Fatal(app.Listen(":3000"))
 }
 
-func reverseViewSales(input []*ViewSale) []*ViewSale {
+func reverseViewSales(input []*model.ViewSale) []*model.ViewSale {
 	if len(input) == 0 {
 		return input
 	}
@@ -694,7 +695,7 @@ func checkAuthState(c *fiber.Ctx) bool {
 		return false
 	}
 
-	var respBody ResponseBody
+	var respBody model.ResponseBody
 
 	if err := json.Unmarshal(body, &respBody); err != nil {
 		log.Println("Error unmarshalling response body -", err)
@@ -709,57 +710,4 @@ func checkAuthState(c *fiber.Ctx) bool {
 
 	// hmm?
 	return false
-}
-
-// I should use this format when returning json from server (nest the data json inside this json?)
-type ResponseBody struct {
-	Data    string `json:"data"`
-	Message string `json:"message"`
-	Status  string `json:"status"`
-}
-
-type FormAuth struct {
-	Identity   string `json:"identity" xml:"identity" form:"identity"`
-	Password   string `json:"password" xml:"password" form:"password"`
-	RememberMe bool   `json:"remember_me" xml:"remember_me" form:"remember_me"`
-}
-
-type FormNewSale struct {
-	Sale_TimeDate  string `json:"sale_time_date" xml:"sale_time_date" form:"sale_time_date"`
-	PaymentMethod  string `json:"payment_type" xml:"payment_type" form:"payment_type"`
-	Qty_FreshJuice int    `json:"fresh_juice_qty" xml:"fresh_juice_qty" form:"fresh_juice_qty"`
-	Qty_CutFruit   int    `json:"cut_fruit_qty" xml:"cut_fruit_qty" form:"cut_fruit_qty"`
-	Qty_RawFruit   int    `json:"raw_fruit_qty" xml:"raw_fruit_qty" form:"raw_fruit_qty"`
-}
-
-type JsonSale struct {
-	ID          int       `json:"ID"`
-	Amount      float32   `json:"amount"`
-	Qty         float32   `json:"qty"` //this is float and not int bcos in case we plan to sell by weight, then it wouldnt make sense to use int
-	PaymentType int       `json:"payment_type"`
-	OperationID int       `json:"operation_id"`
-	ItemID      int       `json:"item_id"`
-	GroupSaleID int       `json:"group_sale_id"`
-	CreatedAt   time.Time `json:"CreatedAt"`
-	UpdatedAt   time.Time `json:"UpdatedAt"`
-}
-
-type ViewSale struct {
-	ID          int    `json:"id"`
-	Amount      string `json:"amount"`
-	Qty         string `json:"quantity"` //this is float and not int bcos in case we plan to sell by weight, then it wouldnt make sense to use int
-	PaymentType string `json:"payment_type"`
-	Operation   string `json:"operation"`
-	Item        string `json:"item"`
-	Time        string `json:"time"`
-	Date        string `json:"date"`
-}
-
-type ViewSalesReport struct {
-	TotalGrossRevenue float64 `json:"total_gross_revenue"`
-	TotalExpenses     float64 `json:"total_expenses"`
-	TotalNetRevenue   float64 `json:"total_net_revenue"`
-	IncomeTax         float64 `json:"income_tax"`
-	GrantLoan         float64 `json:"grant_loan"`
-	ProfitLoss        float64 `json:"profit_loss"`
 }
