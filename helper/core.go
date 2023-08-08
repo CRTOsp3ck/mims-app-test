@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"math"
 	"net/http"
 	"time"
 
@@ -13,10 +12,6 @@ import (
 	"github.com/CRTOsp3ck/mims-app/model"
 	"github.com/gofiber/fiber/v2"
 )
-
-func RoundTo(n float64, decimals uint32) float64 {
-	return math.Round(n*math.Pow(10, float64(decimals))) / math.Pow(10, float64(decimals))
-}
 
 func ReverseViewSales(input []*model.ViewSale) []*model.ViewSale {
 	if len(input) == 0 {
