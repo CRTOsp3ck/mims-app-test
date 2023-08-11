@@ -28,7 +28,6 @@ func LoginRequest(c *fiber.Ctx) error {
 			"password": %q
 		}`, auth.Identity, auth.Password))
 	body := bytes.NewBuffer(bytesObj)
-	// log.Println("BODY - ", body)
 
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {

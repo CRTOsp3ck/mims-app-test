@@ -289,8 +289,8 @@ func SalesReportUpdatePeriodic(c *fiber.Ctx) error {
 	}
 
 	//extract only the dates
-	d.StartDate = strings.Split(d.StartDate, "T")[0]
-	d.EndDate = strings.Split(d.EndDate, "T")[0]
+	d.StartDate = strings.Split(d.StartDate, " ")[0]
+	d.EndDate = strings.Split(d.EndDate, " ")[0]
 
 	//Fetch from API Server for Periodic VSR
 	//follow the api specification from mims-datastore
@@ -424,5 +424,6 @@ func SalesReportUpdatePeriodic(c *fiber.Ctx) error {
 		"Title":       "Sales Analysis",
 		"PeriodicVsr": periodicVsr,
 		"LifetimeVsr": lifetimeVsr,
+		"Dates":       d,
 	}, "layouts/main")
 }

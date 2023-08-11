@@ -24,6 +24,7 @@
                                     <div class="p-3">
                                         <h5 class="mb-3">Lifetime</h5>
                                         <hr>
+                                        <div class="row mb-2"></div>
                                         <div class="row mb-2">
                                             <div class="col-md-6">
                                                 <h6>Total Gross Revenue</h6>
@@ -66,6 +67,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mb-2"></div>
                                     <div class="ttl-amt py-2 px-3 d-flex justify-content-between align-items-center">
                                         <h6>Profit/Loss</h6>
                                         <h3 style="color: green" class="font-weight-700">RM {{ .LifetimeVsr.ProfitLoss}}</h3>
@@ -75,10 +77,10 @@
                             <div class="col-lg-6 col-md-6 mt-4 mb-3">
                                 <div class="or-detail rounded">
                                     <div class="p-3">
-                                        <h5 class="mb-3">Periodic</h5>
-                                        <hr>
+                                        <!-- <h5 class="mb-3">Periodic</h5>
+                                        <hr> -->
                                         <form action="/main/sales-report/update-periodic/" method="post" novalidate>
-                                            <div class="row mb-2">
+                                            <!-- <div class="row mb-2">
                                                 <div class="col form-group">
                                                     <label style="font-size: smaller;">Start Date</label>
                                                     <input type="datetime-local" class="form-control" id="periodic_sd"
@@ -95,9 +97,16 @@
                                                     <button type="submit"
                                                         class="btn btn-primary btn-block">Update</button>
                                                 </div>
+                                            </div> -->
+                                            <div id="reportrange" style="font-size: medium; background: #fff; cursor: pointer; width: 100%;">
+                                                <i class="fa fa-calendar"></i>&nbsp;
+                                                <span></span> <i class="fa fa-caret-down"></i>
                                             </div>
+                                            
+
                                         </form>
                                         <hr>
+                                        <div class="row mb-2"></div>
                                         <div class="row mb-2">
                                             <div class="col-md-6">
                                                 <h6>Total Gross Revenue</h6>
@@ -140,6 +149,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mb-2"></div>
                                     <div class="ttl-amt py-2 px-3 d-flex justify-content-between align-items-center">
                                         <h6>Profit/Loss</h6>
                                         <h3 style="color: green" class="font-weight-700">RM {{ .PeriodicVsr.ProfitLoss
@@ -147,6 +157,8 @@
                                     </div>
                                 </div>
                             </div>
+
+
                         </div>
                         <div class="row mb-3">
                             <div class="col-sm-12">
@@ -381,6 +393,80 @@
 
 
 {{define "js"}}
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script type="text/javascript">
+        $(function() {
+        
+            // var start = moment().subtract(29, 'days');
+            // var end = moment();
+            
+            var start = Date.parse("{{.Dates.StartDate}}");
+            var end = Date.parse("{{.Dates.EndDate}}");
+
+            function cb(start, end) {
+                $('#reportrange span').html("{{.Dates.StartDate}}" + " -> " + "{{.Dates.EndDate}}");
+            }
+
+            console.log("unixtime_sd:: " + start)
+            console.log("unixtime_ed:: " + end)
 
 
+            $('#reportrange').daterangepicker({
+                startDate: start,
+                endDate: end,
+                ranges: {
+                'Today': [moment(), moment()],
+                'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                timePicker:true
+            }, cb);
+
+            $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
+                console.log(picker.startDate.format('YYYY-MM-DD HH:MM:SS'));
+                console.log(picker.endDate.format('YYYY-MM-DD HH:MM:SS'));
+
+                // Post to the provided URL with the specified parameters.
+                function post(path, parameters) {
+                    var form = $('<form></form>');
+
+                    form.attr("method", "post");
+                    form.attr("action", path);
+
+                    $.each(parameters, function(key, value) {
+                        var field = $('<input></input>');
+
+                        field.attr("type", "hidden");
+                        field.attr("name", key);
+                        field.attr("value", value);
+
+                        form.append(field);
+                    });
+
+                    // The form needs to be a part of the document in
+                    // order for us to be able to submit it.
+                    $(document.body).append(form);
+                    form.submit();
+                }
+                
+                // here i need to send a post request
+                const body = {
+                periodic_sd: picker.startDate.format('YYYY-MM-DD HH:MM:SS'),
+                periodic_ed: picker.endDate.format('YYYY-MM-DD HH:MM:SS')
+                };
+
+                post("/main/sales-report/update-periodic", body);
+            });
+
+            //get the dates from response
+            cb(start, end);
+        });
+    </script>
 {{end}}
